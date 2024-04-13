@@ -7,7 +7,7 @@ const RoomSchema = new mongoose.Schema(
       ref: "Hotel",
       required: true,
     },
-    roomName: {
+    name: {
       type: String,
       required: [true, "Please add a name"],
       trim: true,

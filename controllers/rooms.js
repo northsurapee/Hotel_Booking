@@ -1,9 +1,9 @@
-const Hotel = require("../models/Hotel");
+const Room = require("../models/Room");
 
-//@desc     Get all hotels
-//@route    GET /api/v1/hotels
+//@desc     Get all rooms
+//@route    GET /api/v1/rooms
 //@access   Public
-exports.getHotels = async (req, res, next) => {
+exports.getRooms = async (req, res, next) => {
   let query;
 
   // Extract req.query
@@ -25,7 +25,7 @@ exports.getHotels = async (req, res, next) => {
     (match) => `$${match}`
   );
 
-  query = Hotel.find(JSON.parse(queryStr)).populate("rooms");
+  query = Room.find(JSON.parse(queryStr));
 
   // Select Fields
   if (req.query.select) {
@@ -47,11 +47,11 @@ exports.getHotels = async (req, res, next) => {
   const startIndex = (page - 1) * limit;
   const endIndex = page * limit;
   try {
-    const total = await Hotel.countDocuments();
+    const total = await Room.countDocuments();
     query = query.skip(startIndex).limit(limit);
 
     // Excecute query
-    const hotels = await query;
+    const rooms = await query;
 
     // Pagination result
     const pagination = {};
@@ -71,71 +71,71 @@ exports.getHotels = async (req, res, next) => {
     }
     res.status(200).json({
       success: true,
-      count: hotels.length,
+      count: rooms.length,
       pagination,
-      data: hotels,
+      data: rooms,
     });
   } catch (err) {
     res.status(400).json({ success: false });
   }
 };
 
-//@desc     Get single hotel
-//@route    GET /api/v1/hotels/:id
+//@desc     Get single room
+//@route    GET /api/v1/rooms/:id
 //@access   Public
-exports.getHotel = async (req, res, next) => {
+exports.getRoom = async (req, res, next) => {
   try {
-    const hotel = await Hotel.findById(req.params.id).populate("rooms");
-    if (!hotel)
-      return res.status(404).json({ success: false, msg: "Hotel not found" });
-    res.status(200).json({ success: true, data: hotel });
+    const room = await Room.findById(req.params.id);
+    if (!room)
+      return res.status(404).json({ success: false, msg: "Room not found" });
+    res.status(200).json({ success: true, data: room });
   } catch (err) {
     res.status(400).json({ success: false });
   }
 };
 
-//@desc     Create a hotel
-//@route    POST /api/v1/hotels
+//@desc     Create a room
+//@route    POST /api/v1/rooms
 //@access   Private
-exports.createHotel = async (req, res, next) => {
-  const hotel = await Hotel.create(req.body);
+exports.createRoom = async (req, res, next) => {
+  const room = await Room.create(req.body);
   res.status(201).json({
     success: true,
-    data: hotel,
+    data: room,
   });
 };
 
-//@desc     Update single hotel
-//@route    PUT /api/v1/hotels/:id
+//@desc     Update single room
+//@route    PUT /api/v1/rooms/:id
 //@access   Private
-exports.updateHotel = async (req, res, next) => {
+exports.updateRoom = async (req, res, next) => {
   try {
     // Set updatedAt attribute to current date-time
     req.body.updatedAt = Date.now();
 
-    const hotel = await Hotel.findByIdAndUpdate(req.params.id, req.body, {
+    const room = await Room.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true,
     });
-    if (!hotel)
-      return res.status(404).json({ success: false, msg: "Hotel not found" });
-    res.status(200).json({ success: true, data: hotel });
+    if (!room)
+      return res.status(404).json({ success: false, msg: "Room not found" });
+    res.status(200).json({ success: true, data: room });
   } catch {
     return res.status(400).json({ success: false });
   }
 };
 
-//@desc     Delete single hotel
-//@route    DELETE /api/v1/hotels/:id
+//@desc     Delete single room
+//@route    DELETE /api/v1/rooms/:id
 //@access   Private
-exports.deleteHotel = async (req, res, next) => {
+exports.deleteRoom = async (req, res, next) => {
   try {
-    const hotel = await Hotel.findById(req.params.id);
+    const room = await Room.findById(req.params.id);
 
-    if (!hotel)
-      return res.status(404).json({ success: false, msg: "Hotel not found" });
+    if (!room)
+      return res.status(404).json({ success: false, msg: "Room not found" });
 
-    await hotel.deleteOne();
+    await room.deleteOne();
 
     res.status(200).json({ success: true, data: {} });
   } catch (err) {
