@@ -51,12 +51,12 @@ app.use(cookieParser());
 // Forward to Routes middleware (if endpoint matched)
 // const hotels = require("./routes/hotels");
 // const rooms = require("./routes/rooms");
-// const auth = require("./routes/auth");
+const auth = require("./routes/auth");
 // const bookings = require("./routes/bookings");
 
 // app.use("/api/v1/hospitals", hotels);
 // app.use("/api/v1/rooms", rooms);
-// app.use("/api/v1/auth", auth);
+app.use("/api/v1/auth", auth);
 // app.use("/api/v1/appointments", bookings);
 
 const swaggerOptions = {
