@@ -12,7 +12,7 @@ const {
 // } = require("../controllers/appointments"); // By NORTH
 
 // // Include other resource routers
-// const appointmentRouter = require("./appointments");
+const bookingRouter = require("./bookings");
 
 // Create express router
 const router = express.Router();
@@ -21,7 +21,7 @@ const router = express.Router();
 const { protect, authorize } = require("../middleware/auth");
 
 // // Re-route into other resource routers
-// router.use("/:hospitalId/appointments/", appointmentRouter);
+router.use("/:hotelID/bookings", bookingRouter);
 
 // Assign controller to each route
 router.route("/").get(getHotels).post(protect, authorize("admin"), createHotel);
