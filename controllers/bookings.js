@@ -102,13 +102,68 @@ exports.addBooking = async (req, res, next) => {
 
         // Ownership
         req.body.userId = req.user.id
-        const existedBooking = await Booking.find({ user: req.user.id })
+
+        // Check days of booking
+        const startDateObj = new Date(req.body.startDate);
+        const endDateObj = new Date(req.body.endDate);
+
+        // Calculate the difference in milliseconds
+        const timeDifference = endDateObj.getTime() - startDateObj.getTime();
+
+        // Convert milliseconds to days (1 day = 24 hours * 60 minutes * 60 seconds * 1000 milliseconds)
+        const differenceInDays = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+
+        // const existedBooking = await Booking.find({ user: req.user.id })
         // If not admin, user can create only 3 appointment
-        if (existedBooking.lenght >= 3 && req.user.role !== 'admin') {
-            return res.status(400).json({ success: false, message: `The user with ID ${req.user.id} has already made 3 bookings` })
+        if (differenceInDays >= 3 && req.user.role !== 'admin') {
+            return res.status(400).json({ success: false, message: `The user with ID ${req.user.id} has can make at most 3 days for each booking` })
+        }
+        // console.log(req.body)
+
+        // Get all days between startDate and endDate
+        const allDays = [];
+        let currentDate = startDateObj;
+        // Loop through each day until reaching endDate
+        while (currentDate <= endDateObj) {
+            // Add the current date to the list
+            allDays.push(currentDate.toISOString().slice(0, 10)); // Get YYYY-MM-DD format
+
+            // Increment current date by 1 day
+            currentDate.setDate(currentDate.getDate() + 1);
         }
 
+        // Check if there is any day in reservedDate
+        for (r of req.body.rooms) {
+            const room = await Room.findById(r.roomId);
+            let daysInReservedDate = []
+
+            for (const day of allDays) {
+                if (room.reservedDate.some(rd => rd.date.toISOString().slice(0, 10) === day)) {
+                    daysInReservedDate.push(day)
+                }
+            }
+            console.log(daysInReservedDate)
+            if (daysInReservedDate.length > 0) {
+                return res.status(400).json({ success: false, message: `At Room ${room.name} in ${daysInReservedDate.join(', ')}, the room has already reserved` })
+            }
+        }
+
+        // Create new booking
         const booking = await Booking.create(req.body)
+
+        // Update reservedDate
+        for (r of req.body.rooms) {
+            const datesToAdd = allDays.map(day => ({ date: new Date(day), bookingId: booking._id }));
+            const updatedRoom = await Room.findOneAndUpdate(
+                { _id: r.roomId },
+                { $push: { reservedDate: { $each: datesToAdd } } },
+                { new: true } // Return the updated document
+            );
+
+            if (!updatedRoom) {
+                return res.status(500).json({ success: false, message: "Cannot update room" })
+            }
+        }
 
         res.status(200).json({
             success: true,
@@ -128,9 +183,52 @@ exports.updateBooking = async (req, res, next) => {
             return res.status(400).json({ success: false, message: `No booking with the id of ${req.params.id}` })
         }
 
-        // Make sure user is the appointment owner
-        if (booking.userId.toString() !== req.user.id && req.user.role !== 'admin') {
-            return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to update this booking` })
+        if (req.body.startDate || req.body.endDate) {
+            // Check days of booking
+            const startDateObj = req.body.startDate ? new Date(req.body.startDate) : booking.startDate
+            const endDateObj = req.body.endDate ? new Date(req.body.endDate) : booking.endDate
+
+            // Calculate the difference in milliseconds
+            const timeDifference = endDateObj.getTime() - startDateObj.getTime();
+
+            // Convert milliseconds to days (1 day = 24 hours * 60 minutes * 60 seconds * 1000 milliseconds)
+            const differenceInDays = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+
+            // const existedBooking = await Booking.find({ user: req.user.id })
+            // If not admin, user can create only 3 appointment
+            if (differenceInDays >= 3 && req.user.role !== 'admin') {
+                return res.status(400).json({ success: false, message: `The user with ID ${req.user.id} has can make at most 3 days for each booking` })
+            }
+            // console.log(req.body)
+
+            // Get all days between startDate and endDate
+            const allDays = [];
+            let currentDate = startDateObj;
+            // Loop through each day until reaching endDate
+            while (currentDate <= endDateObj) {
+                // Add the current date to the list
+                allDays.push(currentDate.toISOString().slice(0, 10)); // Get YYYY-MM-DD format
+
+                // Increment current date by 1 day
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            // Check if there is any day in reservedDate
+            for (r of booking.rooms) {
+                const room = await Room.findById(r.roomId);
+                let daysInReservedDate = []
+
+                for (const day of allDays) {
+                    if (room.reservedDate.some(rd => rd.date.toISOString().slice(0, 10) === day && rd.bookingId.toString() != booking._id.toString())) {
+                        daysInReservedDate.push(day)
+                    }
+                }
+                console.log(daysInReservedDate)
+                if (daysInReservedDate.length > 0) {
+                    return res.status(400).json({ success: false, message: `At Room ${room.name} in ${daysInReservedDate.join(', ')}, the room has already reserved` })
+                }
+
+            }
         }
 
         booking = await Booking.findByIdAndUpdate(req.params.id, req.body, {
