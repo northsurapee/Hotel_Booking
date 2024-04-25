@@ -183,6 +183,11 @@ exports.updateBooking = async (req, res, next) => {
             return res.status(400).json({ success: false, message: `No booking with the id of ${req.params.id}` })
         }
 
+        const isEmailSent = req.body?.isEmailSent;
+        if (isEmailSent !== undefined && req.user.role !== 'admin') {
+            return res.status(400).json({ success: false, message: `Normal user cannot edit this attribute` })
+        }
+
         if (req.body.startDate || req.body.endDate) {
             // Check days of booking
             const startDateObj = req.body.startDate ? new Date(req.body.startDate) : booking.startDate
