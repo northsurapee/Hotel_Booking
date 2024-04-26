@@ -269,7 +269,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"updated!\"\n}",
+							"raw": "{\n    \"name\": \"{{$randomCompanyName}}\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -309,7 +309,7 @@
 									"    pm.response.to.have.status(200);\r",
 									"});\r",
 									"\r",
-									"postman.setNextRequest(\"Get all hotels\");"
+									"// postman.setNextRequest(\"Get all hotels\");"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -643,7 +643,7 @@
 									"    pm.response.to.have.status(200);\r",
 									"});\r",
 									"\r",
-									"postman.setNextRequest(null);"
+									"// postman.setNextRequest(null);"
 								],
 								"type": "text/javascript",
 								"packages": {}
@@ -699,8 +699,8 @@
 							"script": {
 								"exec": [
 									"pm.environment.set(\"TOKEN\", pm.response.json().token)\r",
-									"pm.test(\"Status code is 200\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
+									"pm.test(\"Status code is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
 									"});\r",
 									"\r",
 									"postman.setNextRequest(\"Login (User)\")"
