@@ -1,0 +1,55 @@
+@startuml Manage Booking (POST)
+
+header Hotel Booking System Sequence Diagram
+footer Group Awat & Surapee
+title "Manage Booking (POST)"
+
+participant "Client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:hotels" as routerHotels
+participant "<<router>>\n:bookings" as routerBookings
+participant "<<middleware>>\n:auth" as middleware
+participant "<<controllers>>\n:bookings" as controllersBookings
+participant "<<model>>\n:Hotel" as modelHotel
+participant "<<model>>\n:Booking" as modelBooking
+participant "<<model>>\n:Room" as modelRoom
+database "<<MySQL>>\n:hotels" as HotelBookingDatabase
+
+client -> server ++:req.post('/api/v1/hotels/:hotelId/bookings/')
+server -> routerHotels ++:app.use('/api/v1/hotels',hotels)
+routerHotels -> routerBookings ++:router.use('/:hotelId/bookings/', bookingRouter)
+routerBookings -> middleware ++:protect()\nauthorize('admin','user')
+alt Already logged in and correct role
+    middleware --> routerBookings : next()
+    routerBookings -> controllersBookings ++: addBooking()
+else Not logged in yet
+    middleware --> client : res.status(401).json({ sucess: false, message: 'Not authorize to access this route' })
+else Wrong role
+    middleware --> client --: res.status(403).json({ sucess: false, message: `User role ${req.user.role} is not authorized to access this route` })
+end
+controllersBookings -> modelHotel ++: findById(req.params.hotelId)
+modelHotel -> HotelBookingDatabase ++: HotelSchema
+HotelBookingDatabase --> modelHotel --: hotel
+controllersBookings <-- modelHotel --:hotel
+alt not found hotel in database
+    controllersBookings --> client  : res.status(404).json({ success: false, message: `No hotel with the id of ${req.params.hotelID}` })
+end
+alt user already create 3 days booking and he/she is not an admin
+    controllersBookings --> client : res.status(400).json({ success: false, message: `The user with ID ${req.user.id} can make at most 3 days for each booking` })
+end
+controllersBookings -> modelRoom ++: findById(req.body.room.id)
+modelRoom -> HotelBookingDatabase ++: RoomSchema
+HotelBookingDatabase --> modelRoom --: room
+controllersBookings <-- modelRoom --: room
+alt room is not reserved
+    controllersBookings --> modelBooking : Booking.create(req.body)
+else room has already reserved
+    controllersBookings --> client : res.status(400).json({ success: false, message: `At Room ${room.name} in ${daysInReservedDate.join(', ')}, the room has already reserved` })
+end
+modelBooking -> HotelBookingDatabase : BookingSchema
+HotelBookingDatabase --> modelBooking --: booking
+controllersBookings <-- modelBooking --: booking
+
+controllersBookings --> modelRoom : Room.findOneAndUpdate({ _id: r.roomId }, { $push: { reservedDate: { $each: datesToAdd } } }, { new: true })
+controllersBookings --> client --:res.status(201).json({ success: true, data: booking })
+@enduml

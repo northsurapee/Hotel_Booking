@@ -1,0 +1,23 @@
+@startuml Manage Hotel (GET ALL)
+
+header Hotel Booking System Sequence Diagram
+footer Group Awat & Surapee
+title "Manage Hotel (GET ALL)"
+
+participant "Client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:hotels" as routerHotel
+participant "<<controllers>>\n:hotels" as controllersHotels
+participant "<<model>>\n:Hotel" as modelHotel
+database "<<MongoDB>>\n:HotelBooking" as HotelBookingDatabase
+
+client->server ++:req.get('/api/v1/hotels')
+server->routerHotel ++:app.use('/api/v1/hotels',hotels)
+routerHotel -> controllersHotels ++:getHotels()
+controllersHotels-> modelHotel ++:findAll()
+modelHotel -> HotelBookingDatabase ++: HotelSchema
+HotelBookingDatabase --> modelHotel --: hotels
+controllersHotels <-- modelHotel --:hotels
+controllersHotels-->client --:    res.status(200).json({ success: true, count: hotels.length, pagination, data: hotels })
+
+@enduml

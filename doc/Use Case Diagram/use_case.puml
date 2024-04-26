@@ -1,0 +1,33 @@
+@startuml Hotel Booking System Use Case Diagram
+left to right direction
+actor "User" as user
+rectangle "Hotel Booking System" as HBSystem {
+    usecase "Register" as register
+    usecase "Login" as login
+    usecase "Logout" as logout
+    usecase "View Hotels" as viewHotels
+    usecase "Manage Hotel" as manageHotel
+    usecase "View Rooms" as viewRooms
+    usecase "mange Room" as manageRoom
+    usecase "Manage Booking" as manageBooking
+}
+
+user -- register
+user -- login
+user -- logout
+user -- viewHotels
+user -- manageBooking
+user -- viewRooms
+
+actor "Admin" as admin
+register -- admin
+login -- admin
+logout -- admin
+manageBooking -- admin
+manageHotel -- admin
+manageRoom -- admin
+
+actor "<<service>>\nGoogle SMTP" as smtp
+manageBooking -- smtp
+
+@enduml

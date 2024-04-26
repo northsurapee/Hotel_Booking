@@ -1,0 +1,27 @@
+@startuml Manage Room (GET ONE)
+
+header Hotel Booking System Sequence Diagram
+footer Group Awat & Surapee
+title "Manage Room (GET ONE)"
+
+participant "Client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:rooms" as routerRoom
+participant "<<controllers>>\n:rooms" as controllersRooms
+participant "<<model>>\n:Room" as modelRoom
+database "<<MongoDB>>\n:HotelBooking" as HotelBookingDatabase
+
+client->server ++:req.get('/api/v1/rooms/:id')
+server->routerRoom ++:app.use('/api/v1/rooms',rooms)
+routerRoom -> controllersRooms ++:getRoom()
+controllersRooms-> modelRoom ++:findById(req.params.id)
+modelRoom -> HotelBookingDatabase ++: RoomSchema
+HotelBookingDatabase --> modelRoom --: room
+controllersRooms <-- modelRoom --:room
+alt found in database
+    controllersRooms-->client :res.status(200).json({ success: true, data: room })
+else not found in database
+    controllersRooms-->client --:res.status(404).json({ success: false, msg: 'Room not found' })
+end
+
+@enduml

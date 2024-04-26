@@ -1,0 +1,42 @@
+@startuml Manage Booking (DELETE)
+
+header Hotel Booking System Sequence Diagram
+footer Group Awat & Surapee
+title "Manage Booking (DELETE)"
+
+participant "Client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:bookings" as routerBooking
+participant "<<middleware>>\n:auth" as middleware
+participant "<<controllers>>\n:bookings" as controllersBooking
+participant "<<model>>\n:Booking" as modelBooking
+database "<<MySQL>>\n:HotelBooking" as HotelBookingDatabase
+
+client->server ++:req.delete('/api/v1/bookings/:id')
+server->routerBooking ++:app.use('/api/v1/bookings',bookings)
+routerBooking -> middleware ++:protect()\nauthorize('admin')
+alt Already logged in and correct role
+    middleware --> routerBooking : next()
+    routerBooking -> controllersBooking ++: deleteBooking()
+else Not logged in yet
+    middleware --> client : res.status(401).json({ sucess: false, message: 'Not authorize to access this route' })
+else Wrong role
+    middleware --> client --: res.status(403).json({ sucess: false, message: `User role ${req.user.role} is not authorized to access this route` })
+end
+controllersBooking -> modelBooking ++: findById(req.params.id)
+modelBooking -> HotelBookingDatabase ++: BookingSchema
+HotelBookingDatabase --> modelBooking : booking
+controllersBooking <-- modelBooking : booking
+alt found in database and ( user own the booking or user is admin )
+    controllersBooking -> modelBooking : booking.deleteOne()
+    modelBooking -> HotelBookingDatabase : BookingSchema
+    HotelBookingDatabase --> modelBooking --: booking
+    controllersBooking <-- modelBooking : booking
+    controllersBooking-->client : res.status(200).json({ success: true, data: {} })
+else found in database and ( user not own the booking and user not admin )
+    controllersBooking -> client : res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to delete this booking` })
+else not found in database
+    controllersBooking -> client : return res.status(400).json({ success: false, message: `No booking with the id of ${req.params.id}` })
+end
+
+@enduml

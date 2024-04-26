@@ -1,0 +1,49 @@
+@startuml Manage Booking (PUT)
+
+header Hotel Booking System Sequence Diagram
+footer Group Awat & Surapee
+title "Manage Booking (PUT)"
+
+participant "Client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:bookings" as routerBooking
+participant "<<middleware>>\n:auth" as middleware
+participant "<<controllers>>\n:bookings" as controllersBooking
+participant "<<model>>\n:Booking" as modelBooking
+database "<<MySQL>>\n:HotelBooking" as HotelBookingDatabase
+
+client -> server ++:req.put('/api/v1/bookings/:id')
+server -> routerBooking ++:app.use('/api/v1/bookings' ,bookings)
+routerBooking -> middleware ++:protect()\nauthorize('admin','user')
+alt Already logged in and correct role
+    middleware --> routerBooking : next()
+    routerBooking -> controllersBooking ++: updateBooking()
+else Not logged in yet
+    middleware --> client : res.status(401).json({ sucess: false, message: 'Not authorize to access this route' })
+else Wrong role
+    middleware --> client --: res.status(403).json({ sucess: false, message: `User role ${req.user.role} is not authorized to access this route` })
+end
+alt isEmailSent is in the req.body of user
+    controllersBooking --> client : res.status(400).json({ success: false, message: `Normal user cannot edit this attribute` })
+end
+alt user already create 3 days booking and he/she is not an admin
+    controllersBooking --> client : res.status(400).json({ success: false, message: `The user with ID ${req.user.id} has can make at most 3 days for each booking` }) 
+end
+controllersBooking -> modelBooking ++: Booking.findById(req.params.id)
+modelBooking -> HotelBookingDatabase ++: BookingSchema
+HotelBookingDatabase --> modelBooking : booking
+controllersBooking <-- modelBooking : booking
+alt found in database and ( user own the booking or user is admin )
+    controllersBooking --> modelBooking : Booking.findByIdAndUpdate(req.body)
+else found in database and ( user not own the booking and user not admin )
+    controllersBooking -> client : res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to delete this booking` })
+else not found in database
+    controllersBooking -> client : return res.status(400).json({ success: false, message: `No booking with the id of ${req.params.id}` })
+end
+modelBooking -> HotelBookingDatabase : BookingSchema
+HotelBookingDatabase --> modelBooking --: modifiedBooking
+controllersBooking <-- modelBooking : modifiedBooking
+controllersBooking -> client --:res.status(200).json({ success: true, data: modifiedBooking })
+
+
+@enduml
