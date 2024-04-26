@@ -10,7 +10,7 @@ participant "<<router>>\n:bookings" as routerBooking
 participant "<<middleware>>\n:auth" as middleware
 participant "<<controllers>>\n:bookings" as controllersBooking
 participant "<<model>>\n:Booking" as modelBooking
-database "<<MySQL>>\n:HotelBooking" as HotelBookingDatabase
+database "<<MongoDB>>\n:HotelBooking" as HotelBookingDatabase
 
 client -> server ++:req.put('/api/v1/bookings/:id')
 server -> routerBooking ++:app.use('/api/v1/bookings' ,bookings)

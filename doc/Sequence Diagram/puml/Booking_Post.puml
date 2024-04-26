@@ -13,7 +13,8 @@ participant "<<controllers>>\n:bookings" as controllersBookings
 participant "<<model>>\n:Hotel" as modelHotel
 participant "<<model>>\n:Booking" as modelBooking
 participant "<<model>>\n:Room" as modelRoom
-database "<<MySQL>>\n:hotels" as HotelBookingDatabase
+database "<<MongoDB>>\n:HotelBooking" as HotelBookingDatabase
+actor "<<service>>\nGoogle SMTP" as smtp
 
 client -> server ++:req.post('/api/v1/hotels/:hotelId/bookings/')
 server -> routerHotels ++:app.use('/api/v1/hotels',hotels)
@@ -51,5 +52,6 @@ HotelBookingDatabase --> modelBooking --: booking
 controllersBookings <-- modelBooking --: booking
 
 controllersBookings --> modelRoom : Room.findOneAndUpdate({ _id: r.roomId }, { $push: { reservedDate: { $each: datesToAdd } } }, { new: true })
+controllersBookings --> smtp : sendEmail()
 controllersBookings --> client --:res.status(201).json({ success: true, data: booking })
 @enduml
