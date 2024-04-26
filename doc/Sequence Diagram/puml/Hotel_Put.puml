@@ -1,0 +1,36 @@
+@startuml Manage Hotel (PUT)
+
+header Hotel Booking System Sequence Diagram
+footer Group Awat & Surapee
+title "Manage Hotel (PUT)"
+
+participant "Client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:hotels" as routerHotel
+participant "<<middleware>>\n:auth" as middleware
+participant "<<controllers>>\n:hotels" as controllersHotels
+participant "<<model>>\n:Hotel" as modelHotel
+database "<<MongoDB>>\n:HotelBooking" as HotelBookingDatabase
+
+client->server ++:req.put('/api/v1/hotels/:id')
+server->routerHotel ++:app.use('/api/v1/hotels',hotels)
+routerHotel -> middleware ++:protect()\nauthorize('admin')
+alt Already logged in and correct role
+    middleware --> routerHotel : next()
+    routerHotel -> controllersHotels ++: updateHotel()
+else Not logged in yet
+    middleware --> client : res.status(401).json({ sucess: false, message: 'Not authorize to access this route' })
+else Wrong role
+    middleware --> client --: res.status(403).json({ sucess: false, message: `User role ${req.user.role} is not authorized to access this route` })
+end
+controllersHotels -> modelHotel ++: findByIdAndUpdate(req.params.id, req.body)
+modelHotel -> HotelBookingDatabase ++: HotelSchema
+HotelBookingDatabase --> modelHotel : modifiedHotel
+controllersHotels <-- modelHotel : modifiedHotel
+alt found in database
+    controllersHotels-->client : res.status(200).json({ success: true, data: hotel })
+else not found in database
+    controllersHotels -> client : res.status(404).json({ success: false, msg: "Hotel not found" })
+end
+
+@enduml

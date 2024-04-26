@@ -1,0 +1,33 @@
+@startuml Manage Room (POST)
+
+header Hotel Booking System Sequence Diagram
+footer Group Awat & Surapee
+title "Manage Room (POST)"
+
+participant "Client" as client
+participant "<<javaScript>>\n:server" as server
+participant "<<router>>\n:rooms" as routerRoom
+participant "<<middleware>>\n:auth" as middleware
+participant "<<controllers>>\n:rooms" as controllersRooms
+participant "<<model>>\n:Room" as modelRoom
+database "<<MongoDB>>\n:HotelBooking" as HotelBookingDatabase
+
+
+client->server ++:req.post('/api/v1/rooms')
+server->routerRoom ++:app.use('/api/v1/rooms',rooms)
+routerRoom -> middleware ++:protect()\nauthorize('admin')
+alt Already logged in and correct role
+    middleware --> routerRoom : next()
+    routerRoom -> controllersRooms ++: createRoom()
+else Not logged in yet
+    middleware --> client : res.status(401).json({ sucess: false, msg: 'Not authorize to access this route' })
+else Wrong role
+    middleware --> client --: res.status(403).json({ sucess: false, msg: `User role ${req.user.role} is not authorized to access this route` })
+end
+controllersRooms-> modelHotel ++:create(req.body)
+modelHotel -> HotelBookingDatabase ++: RoomSchema
+HotelBookingDatabase --> modelHotel --: room
+controllersRooms <-- modelHotel --:room
+controllersRooms --> client --: res.status(201).json({ success: true, data: room })
+
+@enduml
