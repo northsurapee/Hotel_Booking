@@ -137,6 +137,9 @@ exports.addBooking = async (req, res, next) => {
         let allRooms = []
         for (r of req.body.rooms) {
             const room = await Room.findById(r.roomId);
+            if (!room) {
+                return res.status(500).json({ success: false, message: "Room not found" })
+            }
             allRooms.push(room.name)
             let daysInReservedDate = []
             for (const day of allDays) {
@@ -180,7 +183,7 @@ exports.addBooking = async (req, res, next) => {
         //     return res.status(400).json({ success: false, message: `Email has not been sent yet` })
         // }
 
-        res.status(200).json({
+        res.status(201).json({
             success: true,
             data: booking
         })
