@@ -2232,7 +2232,7 @@
 	"variable": [
 		{
 			"key": "URL",
-			"value": "http://surapee-vacq.us-east-1.elasticbeanstalk.com"
+			"value": "http://localhost:3000"
 		},
 		{
 			"key": "TOKEN",
