@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "b4b92390-b8c8-4c5b-b8f1-82bf92841fa9",
-		"name": "Hotel Booking",
+		"name": "HotelBooking",
 		"description": "Backend API for reserving Vaccine jab timeslots, including hospitals, users, and bookings.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "31863056",
@@ -722,7 +722,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\":\"pingping\",\n    \"email\":\"awatsingdamrong@gmail.com\",\n    \"password\":\"12345678\",\n    \"role\":\"user\"\n}",
+							"raw": "{\n    \"name\":\"pingping\",\n    \"email\":\"{{$randomUserName}}@gmail.com\",\n    \"password\":\"12345678\",\n    \"tel\" : \"0851119544\",\n    \"role\":\"user\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
