@@ -117,7 +117,7 @@ exports.addBooking = async (req, res, next) => {
         // const existedBooking = await Booking.find({ user: req.user.id })
         // If not admin, user can create only 3 appointment
         if (differenceInDays >= 3 && req.user.role !== 'admin') {
-            return res.status(400).json({ success: false, message: `The user with ID ${req.user.id} has can make at most 3 days for each booking` })
+            return res.status(400).json({ success: false, message: `The user with ID ${req.user.id} can make at most 3 days for each booking` })
         }
         // console.log(req.body)
 
