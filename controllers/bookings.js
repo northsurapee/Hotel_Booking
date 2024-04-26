@@ -1,6 +1,7 @@
 const Booking = require('../models/Booking')
 const Hotel = require('../models/Hotel')
 const Room = require('../models/Room')
+const { sendEmail } = require('../utils/booking')
 
 exports.getBookings = async (req, res, next) => {
     let query
@@ -133,10 +134,11 @@ exports.addBooking = async (req, res, next) => {
         }
 
         // Check if there is any day in reservedDate
+        let allRooms = []
         for (r of req.body.rooms) {
             const room = await Room.findById(r.roomId);
+            allRooms.push(room.name)
             let daysInReservedDate = []
-
             for (const day of allDays) {
                 if (room.reservedDate.some(rd => rd.date.toISOString().slice(0, 10) === day)) {
                     daysInReservedDate.push(day)
@@ -164,6 +166,19 @@ exports.addBooking = async (req, res, next) => {
                 return res.status(500).json({ success: false, message: "Cannot update room" })
             }
         }
+        // console.log('sendEmail:', sendEmail)
+        const isSent = sendEmail(
+            req.user.email,
+            'Hotel Booking Confirmation',
+            `Your booking at ${hotel.name}<br>
+            For Room ${allRooms.join(", ")}<br>
+            From ${req.body.startDate} to ${req.body.endDate}
+            has been successfully confirmed. We hope you enjoy your stay!`
+        )
+
+        // if (!isSent) {
+        //     return res.status(400).json({ success: false, message: `Email has not been sent yet` })
+        // }
 
         res.status(200).json({
             success: true,
@@ -181,6 +196,11 @@ exports.updateBooking = async (req, res, next) => {
 
         if (!booking) {
             return res.status(400).json({ success: false, message: `No booking with the id of ${req.params.id}` })
+        }
+
+        // Make sure user is the appointment owner
+        if (booking.userId.toString() !== req.user.id && req.user.role !== 'admin') {
+            return res.status(401).json({ success: false, message: `User ${req.user.id} is not authorized to delete this booking` })
         }
 
         const isEmailSent = req.body?.isEmailSent;

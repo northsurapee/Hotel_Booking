@@ -35,7 +35,7 @@ const BookingSchema = new mongoose.Schema({
   ],
   isEmailSent: {
     type: Boolean,
-    default: false,
+    default: true,
   },
   createdAt: {
     type: Date,
