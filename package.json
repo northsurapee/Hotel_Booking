@@ -28,6 +28,7 @@
     "mysql2": "^3.9.4",
     "newman": "^6.1.2",
     "newman-reporter-htmlextra": "^1.23.1",
+    "nodemailer": "^6.9.13",
     "prettier": "^3.2.5",
     "swagger-jsdoc": "^6.0.0",
     "swagger-ui-express": "^5.0.0"
